@@ -23,9 +23,8 @@ class CodeCompressor(Compressor):
             import tree_sitter
             import tree_sitter_python
             
-            self.language_obj = tree_sitter.Language(tree_sitter_python.language(), "python")
-            self.parser = tree_sitter.Parser()
-            self.parser.set_language(self.language_obj)
+            self.language_obj = tree_sitter.Language(tree_sitter_python.language())
+            self.parser = tree_sitter.Parser(self.language_obj)
         except ImportError:
             logger.warning("tree-sitter or tree-sitter-python not installed. Falling back to text compression.")
             self.parser = None
