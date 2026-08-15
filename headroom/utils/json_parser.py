@@ -20,9 +20,28 @@ def compress_json(data: Union[Dict, List, str], max_list_items: int = 5) -> Unio
         if len(data) <= max_list_items:
             return [compress_json(item, max_list_items) for item in data]
             
-        keep = max_list_items - 1
-        compressed_list = [compress_json(item, max_list_items) for item in data[:keep]]
-        compressed_list.append(f"... [{len(data) - keep} more items truncated]")
+        # Extract anomalies (items containing error keywords)
+        anomalies = []
+        regular = []
+        
+        for item in data:
+            item_str = str(item).lower()
+            if any(keyword in item_str for keyword in ["error", "fatal", "exception", "fail", "critical", "pg-"]):
+                anomalies.append(item)
+            else:
+                regular.append(item)
+                
+        # Keep anomalies + first few regular items
+        keep = max(0, max_list_items - len(anomalies) - 1)
+        compressed_list = [compress_json(item, max_list_items) for item in regular[:keep]]
+        
+        # Add truncated message
+        truncated_count = len(regular) - keep
+        if truncated_count > 0:
+            compressed_list.append(f"... [{truncated_count} more items truncated]")
+            
+        # Add anomalies back
+        compressed_list.extend([compress_json(item, max_list_items) for item in anomalies])
         return compressed_list
         
     return data
